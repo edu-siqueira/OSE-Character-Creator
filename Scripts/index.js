@@ -2,207 +2,193 @@ import { rollDice } from "./dice.js"
 import { pcClass } from "./class.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    const buttons = document.querySelectorAll('.Attributes .rollButton');
+    const rollButtons = document.querySelectorAll('.Attributes .rollButton');
+    const attributeInput = document.querySelectorAll('.attributeText');
     const resetAttButton = document.getElementById('ResetAttButton')
-    const classSelect = document.getElementById('pcClass')
+    const pcClassSelect = document.getElementById('pcClassSelect')
     const hpRollButton = document.getElementById('hpRollButton')
 
-    buttons.forEach(button => {
-        // Initializes the roll count as zero
-        button.rollCount = 0;
-        let mod;
+    let restrictedClasses = []
 
-        button.addEventListener('click', (ev) => {
+    // Event responsible for handling attribute rolls
+    rollButtons.forEach(rollButton => {
+        // Initializes the roll count as zero
+        rollButton.rollCount = 0;
+        let mod = '';
+
+        rollButton.addEventListener('click', (ev) => {
             ev.preventDefault();
-            const parentDiv = button.closest('div.mb-4');
+            const parentDiv = rollButton.closest('div.mb-4');
             const inputField = parentDiv.querySelector('.attributeText');
             const modifier = parentDiv.querySelector('.Modifier')
 
             const currentValue = parseInt(inputField.value) || 0;
             const rolledValue = rollDice(1, 6, 3);
 
-            if ((currentValue <= 8 || currentValue === 0) && button.rollCount < 2) {
+            if ((currentValue <= 8 || currentValue === 0) && rollButton.rollCount < 2) {
                 inputField.value = rolledValue;
-                button.rollCount++;
+                rollButton.rollCount++;
             } else if (currentValue > 8) {
                 window.alert('You cannot reroll a value larger than 8!');
                 currentValue = currentValue;
-            } else if (button.rollCount === 2) {
+            } else if (rollButton.rollCount === 2) {
                 window.alert('You have already rerolled once!');
                 currentValue = currentValue;
             }
 
+            // Values for Modifiers
             switch(rolledValue) {
-                default:
-                    mod = ''
-                    modifier.innerText = 'Modifier: ' + mod
                 case 3:
                     mod = -3
-                    modifier.innerText = 'Modifier: ' + mod
                     break
                 case 4:
                 case 5:
                     mod = -2
-                    modifier.innerText = 'Modifier: ' + mod
                     break
                 case 6:
                 case 7:
                 case 8:
                     mod = -1
-                    modifier.innerText = 'Modifier: ' + mod
                     break
                 case 9:
                 case 10:
                 case 11:
                 case 12:
                     mod = 0
-                    modifier.innerText = 'Modifier: +' + mod
                     break
                 case 13:
                 case 14:
                 case 15:
                     mod = 1
-                    modifier.innerText = 'Modifier: +' + mod
                     break
                 case 16:
                 case 17:
                     mod = 2
-                    modifier.innerText = 'Modifier: +' + mod
                     break
                 case 18:
                     mod = 3
-                    modifier.innerText = 'Modifier: +' + mod
                     break
+                default:
+                    mod = ''
             }
+            modifier.innerText = 'Modifier: ' + (mod >= 0 ? '+' : '') + mod;
 
+            // Resets all of the attributes values
             resetAttButton.addEventListener('click', () => {
                 const attributes = document.querySelectorAll('.attributeText')
                 attributes.forEach(attribute => {
                     attribute.value = ''
                     modifier.innerText = 'Modifier: '
-                    button.rollCount = 0;
+                    rollButton.rollCount = 0;
+                    restrictedClasses = []
                 })
             })
     })})
 
+// Helper function to disable a class and log it
+function restrictClass(className, optionIndex) {
+    if (!restrictedClasses.includes(className)) {
+        restrictedClasses.push(className);
+        console.log(restrictedClasses);
+        pcClassSelect.options[optionIndex].disabled = true;
+    }
+}
+
+// Event responsible for handling class restrictions
+pcClassSelect.addEventListener('click', () => {
+    const intValue = parseInt(document.getElementById('int').value, 10);
+    const conValue = parseInt(document.getElementById('con').value, 10);
+    const dexValue = parseInt(document.getElementById('dex').value, 10);
+    const wisValue = parseInt(document.getElementById('wis').value, 10);
+
+    attributeInput.forEach(attribute => {
+        const attributeId = attribute.getAttribute('id');
+        const attributeValue = parseInt(attribute.value, 10);
+
+        if (attributeValue < 9 && attributeValue >= 3) {
+            switch (attributeId) {
+                case 'dex':
+                    if (intValue < 9 && intValue >= 3) {
+                        restrictClass('Bard', 3);
+                    } else {
+                        restrictClass('Barbarian', 2);
+                    }
+                    restrictClass('Illusionist', 15)
+                    break;
+                case 'int':
+                    restrictClass('Drow', 5);
+                    restrictClass('Elf', 9);
+                    break;
+                case 'con':
+                    if (intValue < 9 && intValue >= 3) {
+                        restrictClass('Duergar', 7);
+                    }
+                    if (dexValue < 9 && dexValue >= 3) {
+                        restrictClass('Halfling', 13)
+                        restrictClass('Knight', 16)
+                    }
+                    if (wisValue < 9 && wisValue >= 3) {
+                        restrictClass('Ranger', 19)
+                    }
+                    restrictClass('Dwarf', 8);
+                    restrictClass('Gnome', 11);
+                    restrictClass('Svirfneblin', 20)
+                    break;
+                case 'cha':
+                    if (conValue < 9 && conValue >= 3) {
+                        restrictClass('Half-Elf', 12);
+                    }
+                    restrictClass('Paladin', 18)
+                    break;
+                
+            }
+        }
+    });
+});
+
+    // Event responsible for handling character HP roll
     hpRollButton.addEventListener('click', () => {
         hpRollButton.rollCount = 0;
         let hpInput = document.getElementById('hpInput')
-        let chosenClass = classSelect.options[classSelect.selectedIndex].value
+        let chosenClass = pcClassSelect.options[pcClassSelect.selectedIndex].value
+        
+        // Object to map class names to their parameters
+        const classParameters = {
+            Acrobat: [4, 14],
+            Assassin: [4, 14],
+            Barbarian: [8, 14],
+            Bard: [6, 14],
+            Cleric: [6, 14],
+            Drow: [6, 10],
+            Druid: [6, 14],
+            Duergar: [6, 10],
+            Dwarf: [8, 12],
+            Elf: [6, 10],
+            Fighter: [8, 14],
+            Gnome: [4, 8],
+            'Half-Elf': [6, 12],
+            Halfling: [6, 8],
+            'Half-Orc': [6, 8],
+            Illusionist: [4, 14],
+            Knight: [8, 14],
+            'Magic-User': [4, 14],
+            Paladin: [8, 14],
+            Ranger: [8, 14],
+            Svirfneblin: [6, 8],
+            Thief: [4, 14],
+        };
 
-        switch(chosenClass) {
-            default:
-                hpInput.value = ''
-            case 'Acrobat':
-                let acrobat = new pcClass(4, 14)
-                acrobat.calculateHP()
-                hpInput.value = acrobat.totalHP
-                break
-            case 'Assassin':
-                let assassin = new pcClass(4, 14)
-                assassin.calculateHP()
-                hpInput.value = assassin.totalHP
-                break
-            case 'Barbarian':
-                let barbarian = new pcClass(8, 14)
-                barbarian.calculateHP()
-                hpInput.value = barbarian.totalHP
-                break
-            case 'Bard':
-                let bard = new pcClass(6, 14)
-                bard.calculateHP()
-                hpInput.value = bard.totalHP
-                break
-            case 'Cleric':
-                let cleric = new pcClass(6, 14)
-                cleric.calculateHP()
-                hpInput.value = barbarian.totalHP
-                break
-            case 'Drow':
-                let drow = new pcClass(6, 10)
-                drow.calculateHP()
-                hpInput.value = drow.totalHP
-                break
-            case 'Druid':
-                let druid = new pcClass(6, 14)
-                druid.calculateHP()
-                hpInput.value = druid.totalHP
-                break
-            case 'Duergar':
-                let duergar = new pcClass(6, 10)
-                duergar.calculateHP()
-                hpInput.value = duergar.totalHP
-                break
-            case 'Dwarf':
-                let dwarf = new pcClass(8, 12)
-                dwarf.calculateHP()
-                hpInput.value = dwarf.totalHP
-                break
-            case 'Elf':
-                let elf = new pcClass(6, 10)
-                elf.calculateHP()
-                hpInput.value = elf.totalHP
-                break
-            case 'Fighter':
-                let fighter = new pcClass(8, 14)
-                fighter.calculateHP()
-                hpInput.value = fighter.totalHP
-                break
-            case 'Gnome':
-                let gnome = new pcClass(4, 8)
-                gnome.calculateHP()
-                hpInput.value = gnome.totalHP
-                break
-            case 'Half-Elf':
-                let halfElf = new pcClass(6, 12)
-                halfElf.calculateHP()
-                hpInput.value = halfElf.totalHP
-                break
-            case 'Halfling':
-                let halfling = new pcClass(6, 8)
-                halfling.calculateHP()
-                hpInput.value = halfling.totalHP
-                break
-            case 'Half-Orc':
-                let halfOrc = new pcClass(6, 8)
-                halfOrc.calculateHP()
-                hpInput.value = halfOrc.totalHP
-                break
-            case 'Illusionist':
-                let illusionist = new pcClass(4, 14)
-                illusionist.calculateHP()
-                hpInput.value = illusionist.totalHP
-                break
-            case 'Knight':
-                let knight = new pcClass(8, 14)
-                knight.calculateHP()
-                hpInput.value = knight.totalHP
-                break
-            case 'Magic-User':
-                let magicUser = new pcClass(4, 14)
-                magicUser.calculateHP()
-                hpInput.value = magicUser.totalHP
-                break
-            case 'Paladin':
-                let paladin = new pcClass(8, 14)
-                paladin.calculateHP()
-                hpInput.value = paladin.totalHP
-                break
-            case 'Ranger':
-                let ranger = new pcClass(8, 14)
-                ranger.calculateHP()
-                hpInput.value = ranger.totalHP
-                break
-            case 'Svirfneblin':
-                let svirfneblin = new pcClass(6, 8)
-                svirfneblin.calculateHP()
-                hpInput.value = svirfneblin.totalHP
-                break
-            case 'Thief':
-                let thief = new pcClass(4, 14)
-                thief.calculateHP()
-                hpInput.value = thief.totalHP
-                break
+        function setHPForClass(chosenClass) {
+            const params = classParameters[chosenClass];
+            if (params) {
+                let characterClass = new pcClass(...params);
+                characterClass.calculateHP();
+                hpInput.value = characterClass.totalHP;
+            } else {
+                hpInput.value = '';
+            }
         }
+        
+        setHPForClass(chosenClass);
     })
 })
