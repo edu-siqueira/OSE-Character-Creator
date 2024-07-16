@@ -4,8 +4,10 @@ import { pcClass } from "./class.js";
 document.addEventListener('DOMContentLoaded', () => {
     const rollButtons = document.querySelectorAll('.Attributes .rollButton');
     const attributeInput = document.querySelectorAll('.attributeText');
+    const restrictedClassesText = document.getElementById('restrictedClassesText')
     const resetAttButton = document.getElementById('ResetAttButton')
     const pcClassSelect = document.getElementById('pcClassSelect')
+    const pcClassOptions = document.querySelectorAll('#pcClassSelect option')
     const hpRollButton = document.getElementById('hpRollButton')
 
     let restrictedClasses = []
@@ -80,10 +82,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     attribute.value = ''
                     modifier.innerText = 'Modifier: '
                     rollButton.rollCount = 0;
-                    restrictedClasses = []
+                    restrictedClasses.length = 0
                 })
             })
     })})
+
+resetAttButton.addEventListener('click', () => {
+    for (let i = 0; i < pcClassOptions.length; i++){
+        restrictedClassesText.hidden = true
+        restrictedClassesText.innerText = 'Currently Restricted Classes: '
+        pcClassOptions[i].disabled = false
+    }
+})    
 
 // Helper function to disable a class and log it
 function restrictClass(className, optionIndex) {
@@ -142,6 +152,19 @@ pcClassSelect.addEventListener('click', () => {
                     break;
                 
             }
+
+            if (restrictedClasses.length > 0) {
+                restrictedClassesText.hidden = false
+
+                for(let i = 0; i < restrictedClasses.length; i++){
+                    console.log(restrictedClasses[i]);
+
+                    // Checking if restrictedClassestext already includes the Class
+                    if (!restrictedClassesText.innerText.includes(restrictedClasses[i])) {
+                        restrictedClassesText.innerText += `\n${restrictedClasses[i]}`
+                    }
+                }
+            }
         }
     });
 });
@@ -151,7 +174,7 @@ pcClassSelect.addEventListener('click', () => {
         hpRollButton.rollCount = 0;
         let hpInput = document.getElementById('hpInput')
         let chosenClass = pcClassSelect.options[pcClassSelect.selectedIndex].value
-        
+
         // Object to map class names to their parameters
         const classParameters = {
             Acrobat: [4, 14],
@@ -188,7 +211,7 @@ pcClassSelect.addEventListener('click', () => {
                 hpInput.value = '';
             }
         }
-        
+
         setHPForClass(chosenClass);
     })
 })
