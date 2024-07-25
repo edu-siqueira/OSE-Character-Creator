@@ -6,6 +6,7 @@
 * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
     font-family: futura-con;
 }
 
@@ -14,7 +15,7 @@ header {
     font-size: 2rem;
 }
 
-.character-sheet, .Attributes {
+.character-sheet, .Attributes, .Equipment {
     text-align: center;
 }
 
@@ -35,11 +36,11 @@ header {
     color: #fff;
 }
 
-.mb-4{
+.mb-3{
     font-size: 2rem;
 }
 
-.mb-4 input, select {
+.mb-3 input, select {
     border-radius: 10px;
     border-width: 0.5px;
     padding-left: 2px;
@@ -57,4 +58,42 @@ option {
 #hpInput {
     width: 5rem;
     text-align: center;
+}
+
+#goldInput {
+    width: 5rem;
+    text-align: center;
+}
+
+#goldRollButton {
+    width: 6.5rem;
+    background-color: #000;
+    color: #fff;
+}
+
+.attributes-container, .equipment-container{
+    background-color: #000;
+    color: #fff;
+    width: 100%;
+}
+
+.row {
+    font-size: 2rem;
+}
+
+.row input {
+    border-radius: 10px;
+    border-width: 0.5px;
+    padding-left: 2px;
+}
+
+#gear-container input[type=number] {
+    margin: 1.5rem;
+    width: 5rem;
+    align-self: center;
+    text-align: center;
+}
+
+#gear-container label {
+    display: inline-block;
 }
